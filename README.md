@@ -1,48 +1,124 @@
 # 基礎プログラミングII — 第10回 演習
 
-**日付:** 2026-06-15  
-**テーマ:** テキストファイルを行単位で読む + サイエンスアート
+**日付:** 2026-06-15　**テーマ:** テキストファイルを行単位で読む + サイエンスアート
 
 ---
 
-## 今日の流れ
+## 前回（#9）から今回（#10）へのつながり
 
-1. このリポジトリを **Fork** する（右上の Fork ボタン）
-2. クローンして step ファイルを **番号順に** 動かす
-3. `step5` まで完成したら `color.csv` を自由に書き換えてみる
-4. ボーナス問題（`bonus_odd_divisible.c`）を解く
-5. 変更を commit → push → **Pull Request** を送る
+前回は「ファイルにデータを書いて、読み直す」基本を学びました。
+
+```
+前回（#9）でできるようになったこと
+  fopen / fprintf / fscanf / fclose
+  → ファイルに数字や単語を書いて、読み直せる
+
+でも、こんな行が読めなかった
+  "夕焼け オレンジ,30,90,95,400,300,80"
+          ↑
+      スペースが入っている！
+      fscanf はスペースで読み取りを止めてしまう
+```
+
+```
+今回（#10）で解決する
+  fgets  → 1行まるごと読む（スペースも日本語もOK）
+  sscanf → 読んだ行をフィールドごとに分解する
+```
 
 ---
 
-## ファイル構成（実行順）
+## これができるようになると何が変わるか
 
-| ファイル | 内容 |
-|---------|------|
-| `color.csv` | 色データ（名前・HSB・座標・半径） |
-| `step1_fgets_line.c` | ① fgets で1行読む |
-| `step2_fgets_loop.c` | ② fgets ループで全行読む |
-| `step3_sscanf_parse.c` | ③ sscanf で文字列を分解する |
-| `step4_color_csv.c` | ④ color.csv を読んでテキスト表示（完成版） |
-| `step5_color_draw.c` | ⑤ color.csv を読んで raylib で描画（完成版） |
-| `bonus_odd_divisible.c` | ★ ボーナス問題（発展） |
+| やりたいこと | 今回学ぶ技術 |
+|------------|------------|
+| スペースや日本語を含む CSV を読む | `fgets` + `sscanf` |
+| 色のデータを読んで画面に描く | `fgets` + `sscanf` + `raylib` |
+| センサーのログを全行まとめて処理する | `fgets` ループ |
+| 「プログラムとデータを分ける」設計をする | CSV ファイルを差し替えるだけで動作が変わる |
+
+**今回の最終ゴール：**  
+`color.csv` の中身（色・座標・サイズ）を書き換えるだけで、  
+画面に表示される絵がそのまま変わるプログラムを作る。
 
 ---
 
-## コンパイル方法
+## ファイル構成（この順番に進めてください）
+
+| 順番 | ファイル | 内容 |
+|:---:|---------|------|
+| 0 | `step0_debug_quiz.c` | 【復習】前回のバグ探し（fopen / NULLチェック / fclose） |
+| 1 | `step1_fgets_line.c` | fgets で1行だけ読む |
+| 2 | `step2_fgets_loop.c` | fgets ループで全行読む |
+| 3 | `step3_sscanf_parse.c` | sscanf で文字列を分解する |
+| 4 | `step4_color_csv.c` | color.csv を読んでテキスト表示（完成版） |
+| 5 | `step5_color_draw.c` | color.csv を読んで raylib で描画（完成版） |
+| ★ | `bonus_odd_divisible.c` | ボーナス問題（数学 × プログラム） |
+
+---
+
+## コマンド一覧（VS Code ターミナルで使う）
+
+### ターミナルを開く
+```
+Ctrl + `（バッククォート）
+```
+
+### ファイルを確認する
 
 ```bash
-# step1 〜 step4
-gcc step1_fgets_line.c    -o step1
-gcc step2_fgets_loop.c    -o step2
-gcc step3_sscanf_parse.c  -o step3
-gcc step4_color_csv.c     -o step4
+ls                        # 今いるフォルダのファイル一覧を表示
+cat color.csv             # ファイルの中身をそのまま表示
+```
 
-# step5（raylib が必要）
+### コンパイルして実行する
+
+```bash
+# 基本の形: gcc ソースファイル名 -o 実行ファイル名
+gcc step1_fgets_line.c -o step1
+./step1
+
+gcc step2_fgets_loop.c -o step2
+./step2
+
+gcc step3_sscanf_parse.c -o step3
+./step3
+
+gcc step4_color_csv.c -o step4
+./step4
+
+# step5 は raylib が必要（-lraylib -lm をつける）
 gcc step5_color_draw.c -o step5 -lraylib -lm
+./step5
 
 # bonus
 gcc bonus_odd_divisible.c -o bonus
+./bonus
+```
+
+### よく使うその他のコマンド
+
+```bash
+# ファイルをコピーする
+cp color.csv color_backup.csv
+
+# ファイルを削除する（注意：元に戻せない）
+rm step1
+
+# 直前のコマンドをもう一度実行する（↑キーで履歴をたどれる）
+↑ キー
+
+# コンパイル → 実行を1行でやる（&& は「前が成功したら次を実行」）
+gcc step4_color_csv.c -o step4 && ./step4
+```
+
+### エラーが出たとき
+
+```bash
+# エラーメッセージの例
+step4_color_csv.c:12:5: error: ...
+     ↑            ↑
+  ファイル名    行番号   ← VS Code でその行にジャンプして確認する
 ```
 
 ---
@@ -51,10 +127,10 @@ gcc bonus_odd_divisible.c -o bonus
 
 ```bash
 # 1. Fork したリポジトリをクローン
-git clone https://github.com/あなたのID/kiso-prog2-09-0615.git
-cd kiso-prog2-09-0615
+git clone https://github.com/あなたのID/kiso-prog2-10-0615.git
+cd kiso-prog2-10-0615
 
-# 2. ブランチを作る（名前は自分の名前で）
+# 2. 自分の名前でブランチを作る
 git checkout -b yamada-taro
 
 # 3. ファイルを編集・追加したら
